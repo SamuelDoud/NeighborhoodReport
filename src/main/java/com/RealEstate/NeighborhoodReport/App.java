@@ -1,8 +1,8 @@
 package com.RealEstate.NeighborhoodReport;
 
 /**
- * Hello world!
- *
+ * @author Samuel Doud
+ * 11/7/2015
  */
 import com.google.maps.*;
 import com.google.maps.model.DistanceMatrix;
@@ -17,6 +17,23 @@ public class App
 {
 	static GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyCUnVmzye4hwjNRU3bxsNTur-fT7xnWEH8");
     public static void main( String[] args )
+    {
+    	String[] results = getBestPlaces();
+    	for (int i = 0; i < results.length; i++)
+    	{
+    		//System.out.println(groceryStoresNearHome[i]);
+    		System.out.println(results[i]);
+    	}
+  
+    }
+    /**
+     * This is a user method. Asks user for a starting address and destinations
+     * Calls the getAddressMethod and Travel Times on each destination
+     * Finds the particular establishment of a type with the fastest travel time and
+     * adds that to a string array.
+     * @return results An array that holds an establishment of each type with the fastest travel time 
+     */
+    public static String[] getBestPlaces()
     {
     	String baseLocation;
     	ArrayList<String> destinationTypes = new ArrayList<String>();
@@ -34,96 +51,116 @@ public class App
     		}
     	}while (!userString.isEmpty());
     	input.close();
-    	String[] establishmentNearAddress;
+    	String[][] establishmentNearAddress;
     	String[] results = new String[destinationTypes.size()];
-    	for (int index = 0; index < destinationTypes.size(); index++)
+    	establishmentNearAddress = (TravelTime(baseLocation, getAddress(baseLocation, destinationTypes.toArray(new String[destinationTypes.size()]))));//Element zero is the establishment of that type that is the fastest to get to
+		
+		
+    	for (int index = 0; index < establishmentNearAddress.length; index++)
     	{
-    		establishmentNearAddress = getAddress(baseLocation, destinationTypes.get(index));
-    		results[index] = (TravelTime(baseLocation, establishmentNearAddress))[0];//Element zero is the establishment of that type that is the fastest to get to
+    		results[index] = establishmentNearAddress[index][0];
     	}
-    	for (int i = 0; i < results.length; i++)
-    	{
-    		//System.out.println(groceryStoresNearHome[i]);
-    		System.out.println(results[i]);
-    	}
-    	
-    	
-    	
-    	
-    	
+    	return results;
     }
-    public static String[] TravelTime(String startAddress, String[] destinations)
+    /**
+     * returns the travel times of a jagged array of destinations in a sorted manner by duration
+     * 
+     * @param startAddress the base address
+     * @param destinations the places under examination
+     * @return
+     */
+    public static String[][] TravelTime(String startAddress, String[][] destinations)
     {
     	String[] startAddressArr = new String[1];
     	startAddressArr[0] = startAddress;
-    	String[] fastest = new String[destinations.length];
-    	try
+    	String[][] fastest = new String[destinations.length][];
+    	for (int destinationIndex = 0; destinationIndex < destinations.length; destinationIndex++)
     	{
-    		DistanceMatrix distances = DistanceMatrixApi.getDistanceMatrix(context, startAddressArr, destinations).await();
-    		//TODO sort the array by fastest travel time
-    		distances = SortByFastest(distances);
-    		for (int i = 0; i < fastest.length; i++)
-    		{
-    			fastest[i] = destinations[i] + " is " + distances.rows[0].elements[i].duration + " away.";
-    		}
-    	}
-    	catch (Exception e)
-    	{
-    		e.getStackTrace();
+	    	try
+	    	{
+	    		DistanceMatrix distances = DistanceMatrixApi.getDistanceMatrix(context, startAddressArr, destinations[destinationIndex]).await();
+	    		//TODO sort the array by fastest travel time
+	    		distances = SortByFastest(distances);//call a method to sort this matrix
+	    		fastest[destinationIndex] = new String[destinations[destinationIndex].length];
+	    		for (int i = 0; i < destinations[destinationIndex].length; i++)
+	    		{
+	    			fastest[destinationIndex][i] = destinations[destinationIndex][0] + " is " + distances.rows[0].elements[i].duration + " away.";
+	    		}
+	    	}
+	    	catch (Exception e)
+	    	{
+	    		e.getStackTrace();
+	    	}
     	}
     	return fastest;
     }
+    /**
+     * A selection sort based on the fastest travel time
+     * @param matrix
+     * @return
+     */
     public static DistanceMatrix SortByFastest(DistanceMatrix matrix)
     {
     	//sorting algorithm
     	long minTime;
     	int index;
     	long[] travelTimes = new long[matrix.destinationAddresses.length];
-    	for (int i = 0; i < matrix.destinationAddresses.length; i++)
+    	for (int currentRow = 0; currentRow < matrix.rows.length; currentRow++)//loop through each row
     	{
-    		travelTimes[i] = matrix.rows[0].elements[i].duration.inSeconds;
-    	}
-    	for (int first = 0; first < travelTimes.length; first++)
-    	{
-    		index = travelTimes.length - 1;
-    		minTime = travelTimes[index];
-    		for (int second = first; second < travelTimes.length; second++)
-    		{
-    			if (travelTimes[second] < minTime)
-    			{
-    				minTime = travelTimes[second];
-    				index = second;
-    			}
-    		}
-    		//swap first and second
-    		DistanceMatrixElement temp = matrix.rows[0].elements[first];
-    		matrix.rows[0].elements[first] = matrix.rows[0].elements[index];
-    		matrix.rows[0].elements[index] = temp;
-    		long l = travelTimes[index];
-    		travelTimes[index] = travelTimes[first];
-    		travelTimes[first] = l;
+			for (int i = 0; i < matrix.destinationAddresses.length; i++)//put all the travel times of the row into a long array
+			{
+				travelTimes[i] = matrix.rows[currentRow].elements[i].duration.inSeconds;//add a time in seconds to the travelTime array
+			}
+			for (int first = 0; first < travelTimes.length; first++)//go through each element in the array
+			{
+				index = travelTimes.length - 1;
+				minTime = travelTimes[index];//this always has to be an unsorted member. Therefore this is a safe number to use as a base
+				for (int second = first; second < travelTimes.length; second++)//I forget the name of this sort.. probably selection...
+				{//take the least unsorted element and place it in the first index
+					if (travelTimes[second] < minTime)//is the travel time of this element less than the other explored unsorted elements
+					{
+						minTime = travelTimes[second];//minTime and index now reflect this location's attributes
+						index = second;
+					}
+				}
+				//swap first and second
+				DistanceMatrixElement temp = matrix.rows[currentRow].elements[first];
+				matrix.rows[currentRow].elements[first] = matrix.rows[currentRow].elements[index];
+				matrix.rows[currentRow].elements[index] = temp;
+				long l = travelTimes[index];
+				travelTimes[index] = travelTimes[first];
+				travelTimes[first] = l;
+			}
     	}
     	return matrix;
-    	
     }
-    public static String[] getAddress(String baseLocation, String establishmentType)
+    /**
+     * Method takes a base address and establishments and return the addresses
+     * @param baseLocation
+     * @param establishmentType
+     * @return
+     */
+    public static String[][] getAddress(String baseLocation, String[] establishmentType)
     {
     	PlacesSearchResponse responses;
-    	String[] results = new String[1];
-    	try
+    	String[][] allResults = new String[establishmentType.length][];
+    	for (int type = 0; type < establishmentType.length; type++)
     	{
-    		responses = PlacesApi.textSearchQuery(context, establishmentType + " near " + baseLocation).await();
-    		results = new String[responses.results.length];
-    		for (int i = 0; i < responses.results.length; i++)
-    		{
-	    		PlacesSearchResult result = responses.results[i];
-	    		results[i] = (result.name + " " + result.formattedAddress);
-    		}
+	    	try
+	    	{
+	    		responses = PlacesApi.textSearchQuery(context, establishmentType[type] + " near " + baseLocation).await();
+	    		allResults[type] = new String[responses.results.length];
+	    		for (int i = 0; i < responses.results.length; i++)
+	    		{
+		    		PlacesSearchResult result = responses.results[i];
+		    		allResults[type][i] = (result.name + " " + result.formattedAddress);
+	    		}
+	    	}
+	    	catch (Exception e)
+	    	{
+	    		e.printStackTrace();
+	    	}
     	}
-    	catch (Exception e)
-    	{
-    		e.printStackTrace();
-    	}
-    	return results;
+    	return allResults;
     }
 }
