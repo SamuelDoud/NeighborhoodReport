@@ -18,13 +18,13 @@ public class App
 	static GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyCUnVmzye4hwjNRU3bxsNTur-fT7xnWEH8");
     public static void main( String[] args )
     {
-    	String[] results = getBestPlaces();
-    	for (int i = 0; i < results.length; i++)
+    	String home = "1328 Crown Ct. Bloomington Il";
+    	String[] destinations = new String[]{"Taco Bell", "Auto Shop", "Grocery Store"};
+    	String[] printMe = GetBestPlaces(home, destinations);
+    	for (int i = 0; i < printMe.length; i++)
     	{
-    		//System.out.println(groceryStoresNearHome[i]);
-    		System.out.println(results[i]);
+    		System.out.println(printMe[i]);
     	}
-  
     }
     /**
      * This is a user method. Asks user for a starting address and destinations
@@ -33,34 +33,15 @@ public class App
      * adds that to a string array.
      * @return results An array that holds an establishment of each type with the fastest travel time 
      */
-    public static String[] getBestPlaces()
+    public static String[] GetBestPlaces(String baseAddress, String[] locations)
     {
-    	String baseLocation;
-    	ArrayList<String> destinationTypes = new ArrayList<String>();
-    	Scanner input = new Scanner(System.in);
-    	String userString;
-    	System.out.println("Enter a address as a base");
-    	baseLocation = input.nextLine();
-    	System.out.println("Enter the places you want to go to. Press enter with no text to generate results");
-    	do
+    	String [][] destinationsWithTravelTimesAppended = TravelTime(baseAddress, GetAddresses(baseAddress, locations));
+    	String[] fastestOfEach = new String[destinationsWithTravelTimesAppended.length];//create a list that is the length of the destinations array
+    	for (int i = 0; i < fastestOfEach.length; i++)
     	{
-    		userString = input.nextLine();
-    		if (!userString.isEmpty())
-    		{
-    			destinationTypes.add(userString);
-    		}
-    	}while (!userString.isEmpty());
-    	input.close();
-    	String[][] establishmentNearAddress;
-    	String[] results = new String[destinationTypes.size()];
-    	establishmentNearAddress = (TravelTime(baseLocation, getAddress(baseLocation, destinationTypes.toArray(new String[destinationTypes.size()]))));//Element zero is the establishment of that type that is the fastest to get to
-		
-		
-    	for (int index = 0; index < establishmentNearAddress.length; index++)
-    	{
-    		results[index] = establishmentNearAddress[index][0];
+    		fastestOfEach[i] = destinationsWithTravelTimesAppended[i][0];
     	}
-    	return results;
+    	return fastestOfEach;
     }
     /**
      * returns the travel times of a jagged array of destinations in a sorted manner by duration
@@ -84,7 +65,7 @@ public class App
 	    		fastest[destinationIndex] = new String[destinations[destinationIndex].length];
 	    		for (int i = 0; i < destinations[destinationIndex].length; i++)
 	    		{
-	    			fastest[destinationIndex][i] = destinations[destinationIndex][0] + " is " + distances.rows[0].elements[i].duration + " away.";
+	    			fastest[destinationIndex][i] = destinations[destinationIndex][i] + " is " + distances.rows[0].elements[i].duration + " away.";
 	    		}
 	    	}
 	    	catch (Exception e)
@@ -140,7 +121,7 @@ public class App
      * @param establishmentType
      * @return
      */
-    public static String[][] getAddress(String baseLocation, String[] establishmentType)
+    public static String[][] GetAddresses(String baseLocation, String[] establishmentType)
     {
     	PlacesSearchResponse responses;
     	String[][] allResults = new String[establishmentType.length][];
