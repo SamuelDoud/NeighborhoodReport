@@ -20,20 +20,21 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 public class App 
 {
-	private static String APIKey = "AIzaSyCUnVmzye4hwjNRU3bxsNTur-fT7xnWEH8";
-	private static GeoApiContext context = new GeoApiContext().setApiKey(APIKey);//create the object that holds my API key
+	private static String APIKey ;
+	private static GeoApiContext context;
     public static void main( String[] args )
     {
-    	if (args.length < 2)
+    	if (args.length < 3)
     	{//two arguments are needed for this function to work! A base address and at lease one destination!
-    		System.out.println("Entry form is <base address> <desired locations>");
+    		System.out.println("Entry form is <API key> <base address> <desired locations>");
     		System.exit(-1);
     	}
-    	
-    	String home = args[0];
-    	String[] destinations = new String[args.length - 1];
+    	APIKey = args[0];
+    	context = new GeoApiContext().setApiKey(APIKey);//create the object that holds my API key
+    	String home = args[1];
+    	String[] destinations = new String[args.length - 2];
     	String filename  = home + DateTime.now().getDayOfYear() + DateTime.now().getMonthOfYear()+ DateTime.now().getDayOfMonth() + DateTime.now().getSecondOfDay();//a file name based on the time of the day
-    	for (int i = 1; i < args.length; i++)
+    	for (int i = 2; i < args.length; i++)
     	{
     		destinations[i - 1] = args[i];
     	}
