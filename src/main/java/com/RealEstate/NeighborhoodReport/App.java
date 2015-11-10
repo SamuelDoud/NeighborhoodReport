@@ -2,16 +2,13 @@ package com.RealEstate.NeighborhoodReport;
 
 /**
  * @author Samuel Doud
- * 11/7/2015
+ * 11/10/2015
  */
 import com.google.maps.*;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
-import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.PlacesSearchResponse;
 import com.google.maps.model.PlacesSearchResult;
-import com.google.maps.model.TravelMode;
-import java.util.Scanner;
 
 import org.joda.time.DateTime;
 
@@ -23,7 +20,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 public class App 
 {
-	static GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyCUnVmzye4hwjNRU3bxsNTur-fT7xnWEH8");
+	private static String APIKey = "AIzaSyCUnVmzye4hwjNRU3bxsNTur-fT7xnWEH8";
+	private static GeoApiContext context = new GeoApiContext().setApiKey(APIKey);//create the object that holds my API key
     public static void main( String[] args )
     {
     	if (args.length < 2)
@@ -142,10 +140,10 @@ public class App
     public static String[] GetBestPlaces(String[][] destinationsWithTravelTimesAppended)
     {
     	
-    	String[] fastestOfEach = new String[destinationsWithTravelTimesAppended.length];//create a list that is the length of the destinations array
-    	for (int i = 0; i < fastestOfEach.length; i++)
+    	String[] fastestOfEach = new String[destinationsWithTravelTimesAppended.length];//create a list that is the length of the destinations array (since we only need one element per array)
+    	for (int destinationType = 0; destinationType < fastestOfEach.length; destinationType++)
     	{
-    		fastestOfEach[i] = destinationsWithTravelTimesAppended[i][0];
+    		fastestOfEach[destinationType] = destinationsWithTravelTimesAppended[destinationType][0];//takes the top element (the fastest) from each destination
     	}
     	return fastestOfEach;
     }
@@ -169,9 +167,9 @@ public class App
 	    		//TODO MAKE THIS ONE API CALL!!!
 	    		distances = SortByFastest(distances);//call a method to sort this matrix
 	    		fastest[destinationIndex] = new String[destinations[destinationIndex].length];//make fastest of a certain type equal to the length of  the number of destinations
-	    		for (int i = 0; i < destinations[destinationIndex].length; i++)
+	    		for (int place = 0; place < destinations[destinationIndex].length; place++)
 	    		{
-	    			fastest[destinationIndex][i] = destinations[destinationIndex][i] + " is " + distances.rows[0].elements[i].duration + " away.";//set it equal to the travel time
+	    			fastest[destinationIndex][place] = destinations[destinationIndex][place] + " is " + distances.rows[0].elements[place].duration + " away";//set it equal to the travel time
 	    		}//loading up the array based on this info
 	    	}
 	    	catch (Exception e)
@@ -225,7 +223,7 @@ public class App
      * Method takes a base address and establishments and return the addresses
      * @param baseLocation
      * @param establishmentType
-     * @return
+     * @return allResults 
      */
     public static String[][] GetAddresses(String baseLocation, String[] establishmentType)
     {
