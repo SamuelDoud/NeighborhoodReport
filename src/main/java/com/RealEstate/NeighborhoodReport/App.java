@@ -36,14 +36,16 @@ public class App
     	String filename  = home + DateTime.now().getDayOfYear() + DateTime.now().getMonthOfYear()+ DateTime.now().getDayOfMonth() + DateTime.now().getSecondOfDay();//a file name based on the time of the day
     	for (int i = 2; i < args.length; i++)
     	{
-    		destinations[i - 1] = args[i];
+    		destinations[i - 2] = args[i];
     	}
     	String[][] writeToFile = getPlacesOrdered(home,destinations);
     	String[] printMe = GetBestPlaces(writeToFile);
+    	/*
     	for (int i = 0; i < printMe.length; i++)
     	{
     		System.out.println(printMe[i]);
     	}
+    	*/
     	System.exit(WriteToFile(filename, destinations, writeToFile));//Write to file returns a status related to its successful completion
     }
     /**
@@ -166,11 +168,16 @@ public class App
 	    	{
 	    		DistanceMatrix distances = DistanceMatrixApi.getDistanceMatrix(context, startAddressArr, destinations[destinationIndex]).await();//get the matrix from google
 	    		//TODO MAKE THIS ONE API CALL!!!
-	    		distances = SortByFastest(distances);//call a method to sort this matrix
+	    		distances = SortByFastest(distances, destinations[destinationIndex]);//call a method to sort this matrix
 	    		fastest[destinationIndex] = new String[destinations[destinationIndex].length];//make fastest of a certain type equal to the length of  the number of destinations
 	    		for (int place = 0; place < destinations[destinationIndex].length; place++)
 	    		{
-	    			fastest[destinationIndex][place] = destinations[destinationIndex][place] + " is " + distances.rows[0].elements[place].duration + " away";//set it equal to the travel time
+	    			for (int search = 0; search < destinations[destinationIndex].length; search++)
+	    			{
+	    					fastest[destinationIndex][place] = distances.destinationAddresses[place] + " is " + distances.rows[0].elements[place].duration + " away";//set it equal to the travel time
+	    					break;
+
+	    			}
 	    		}//loading up the array based on this info
 	    	}
 	    	catch (Exception e)
@@ -185,7 +192,7 @@ public class App
      * @param matrix
      * @return
      */
-    public static DistanceMatrix SortByFastest(DistanceMatrix matrix)
+    public static DistanceMatrix SortByFastest(DistanceMatrix matrix, String[] addresses)
     {
     	//sorting algorithm
     	long minTime;//the current least amount of time required to travel to a destination type
@@ -213,6 +220,11 @@ public class App
 				DistanceMatrixElement temp = matrix.rows[currentRow].elements[first];
 				matrix.rows[currentRow].elements[first] = matrix.rows[currentRow].elements[index];
 				matrix.rows[currentRow].elements[index] = temp;
+				String tempStr = addresses[first];
+				addresses[first] = addresses[index];
+				addresses[index] = tempStr;
+				matrix.destinationAddresses[first]= addresses[first] + matrix.destinationAddresses[first];
+				
 				long l = travelTimes[index];
 				travelTimes[index] = travelTimes[first];
 				travelTimes[first] = l;
